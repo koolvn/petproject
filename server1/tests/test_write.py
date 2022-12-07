@@ -22,18 +22,19 @@ producer = KafkaProducer(bootstrap_servers='localhost:9092',
                          )
 
 print(producer.config)
-topic = 'tg_requests'
-img = np.ones((1080, 1920, 3), dtype=np.uint8)
+topic = 'tg_requests111'
+img = np.ones((1080 // 2, 1920 // 2, 3), dtype=np.uint8)
 img_numpy = json.dumps({'image': img}, cls=NumpyEncoder)
 
 for i in range(3):
+    t0 = time.time()
     print(f'Sending message #{i}')
     data = {'user': f'{time.time()}',
             'request': {'text': 'Hello world',
                         'media': img_numpy}
             }
-    producer.send(topic, value=data, key=bytes(str(time.time()), 'utf-8'))
-
+    producer.send(topic, value=data, key=bytes(str(time.time()), 'utf-8')).get(timeout=10) # , partition=0)
+    print(f'Took {time.time() - t0:.1f} sec.')
 producer.close()
 #
 # ### bytes topic

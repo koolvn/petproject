@@ -14,7 +14,7 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-producer = KafkaProducer(bootstrap_servers='localhost:9092',
+producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
                          client_id='Test write',
                          buffer_memory=1e9,  # bytes
                          max_request_size=1e9,  # bytes
@@ -22,9 +22,9 @@ producer = KafkaProducer(bootstrap_servers='localhost:9092',
                          )
 
 print(producer.config)
-topic = 'tg_requests111'
+topic = 'tg_requests'
 img = np.ones((1080 // 2, 1920 // 2, 3), dtype=np.uint8)
-img_numpy = json.dumps({'image': img}, cls=NumpyEncoder)
+img_numpy = json.dumps({'image_numpy': img}, cls=NumpyEncoder)
 
 for i in range(3):
     t0 = time.time()

@@ -14,5 +14,8 @@ class BotUser(User):
     def __repr__(self):
         return f'BotUser: @{self.username}, name: {self.first_name}, id:{self.id}'
 
+    def __str__(self):
+        return self.__repr__()
+
     def __getitem__(self, item):
         return getattr(self, item)

@@ -1,6 +1,7 @@
 # Keyboards
 __all__ = ['default_keyboard', 'settings_keyboard', 'custom_url_buttons',
            'help_keyboard', 'voices_keyboard', 'markup_keyboard', 'remove_keyboard']
+
 from telebot.types import InlineKeyboardMarkup, \
     InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
@@ -65,4 +66,10 @@ def markup_keyboard():
 
 def remove_keyboard():
     keyboard = ReplyKeyboardRemove()
+    return keyboard
+
+
+def translate_keyboard():
+    keyboard = InlineKeyboardMarkup()
+    keyboard.row(InlineKeyboardButton('Перевести', callback_data='translate'))
     return keyboard

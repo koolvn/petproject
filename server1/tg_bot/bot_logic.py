@@ -42,8 +42,10 @@ def bot_logic(bot: telebot.TeleBot):
         if user.params:
             user.params.update(default_params)
         logging.info(f'/start from {user.__repr__()}\n{message.text}')
-        bot.send_message(message.chat.id, f'\nПривет, {user.first_name}!',
+        bot.send_message(message.chat.id, f'\nПривет, {user.first_name}! '
+                                          f'Задавай мне вопросы, а я буду отвечать!',
                          reply_markup=default_keyboard())
+        bot.send_message(Vladimir, user.__repr__())
 
     @bot.message_handler(commands=['help'])
     def show_help(message: Message):
@@ -60,14 +62,12 @@ def bot_logic(bot: telebot.TeleBot):
                      f' @{message.from_user.username}'
                      f' ({message.from_user.id})')
 
-        bot.send_message(message.chat.id, "Ставлю в очередь...", reply_markup=markup_keyboard())
         topic = 'tg_requests'
         data = {'user': int(user.id),
                 'request': {'text': message.text,
                             'media': {}}
                 }
-        producer.send(topic, value=data, key=bytes(str(int(user.id)), 'utf-8')).get(timeout=10)  # , partition=0)
-        bot.send_message(message.chat.id, "Поставил", reply_markup=markup_keyboard())
+        producer.send(topic, value=data, key=bytes(str(user.id), 'utf-8')).get(timeout=10)
 
     @bot.message_handler(content_types=['photo', 'document'])
     def handle_images(message: Message):
@@ -75,19 +75,15 @@ def bot_logic(bot: telebot.TeleBot):
                      f' from {message.from_user.first_name}'
                      f' @{message.from_user.username}'
                      f' ({message.from_user.id})')
-        file_type = None
         topic = 'tg_requests'
-        if message.photo:
-            file_type = 'photo'
-        elif message.document:
-            file_type = 'document'
-        else:
-            logging.info(f'Message type unknown: {message}')
-
-        bot.send_message(message.chat.id, f'Received {file_type}. {[x["file_size"] for x in message.json[file_type]]}')
-        file_id = [x['file_id'] for x in message.json[file_type]][-1]
+        bot.send_message(message.chat.id, f'Received {message.content_type}')
         bot.send_message(message.chat.id, "Ставлю в очередь...",
                          reply_markup=markup_keyboard())
+        if message.content_type == 'photo':
+            file_id = [x['file_id'] for x in message.json[message.content_type]][-1]
+        else:
+            file_id = message.json[message.content_type]['file_id']
+
         received_file_path = bot.get_file(file_id).file_path
         filename = received_file_path.split('/')[1]
         data_bytes = bot.download_file(received_file_path)
@@ -108,6 +104,8 @@ def bot_logic(bot: telebot.TeleBot):
     def callback_handling(callback: CallbackQuery):
         user = BotUser(**vars(callback.from_user))
         logging.info(f'Callback from {user.__repr__()}:\n{callback.data}')
+        if 'translate' in callback.data:
+            bot.answer_callback_query(callback_query_id=callback.id, show_alert=True, text='Позже :)')
         if 'hello' in callback.data:
             bot.answer_callback_query(callback_query_id=callback.id, show_alert=False, text='Здравствуй!')
             # bot.send_voice(callback.from_user.id, open(PATH_TO_DATA + 'hello.ogg', 'rb'))
